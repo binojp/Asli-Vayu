@@ -16,15 +16,28 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem("token"));
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api/auth";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
+    // Add request interceptor to always include token
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          config.headers.Authorization = `Bearer ${storedToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       verifyToken();
     } else {
       setLoading(false);
     }
+
+    return () => axios.interceptors.request.eject(interceptor);
   }, [token]);
 
   const verifyToken = async () => {
