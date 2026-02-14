@@ -1,8 +1,16 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Toaster } from 'react-hot-toast'
+import axios from 'axios'
 import App from './App.jsx'
 import "./index.css"
+
+// Send all /api requests to the backend (fixes 404/500 when using relative URLs)
+const apiBase = import.meta.env.VITE_API_URL
+if (apiBase) {
+  axios.defaults.baseURL = apiBase
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

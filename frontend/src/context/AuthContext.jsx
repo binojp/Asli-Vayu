@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token"));
 
   const API_URL = import.meta.env.VITE_API_URL;
+  const AUTH_API = `${API_URL}/api/auth`;
 
   useEffect(() => {
     // Add request interceptor to always include token
@@ -42,7 +43,7 @@ export const AuthProvider = ({ children }) => {
 
   const verifyToken = async () => {
     try {
-      const response = await axios.get(`${API_URL}/me`);
+      const response = await axios.get(`${AUTH_API}/me`);
       setUser(response.data);
     } catch (error) {
       console.error("Token verification failed:", error);
@@ -54,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post(`${API_URL}/register`, userData);
+      const response = await axios.post(`${AUTH_API}/register`, userData);
       const { token: newToken, ...userInfo } = response.data;
       
       localStorage.setItem("token", newToken);
@@ -73,7 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await axios.post(`${API_URL}/login`, credentials);
+      const response = await axios.post(`${AUTH_API}/login`, credentials);
       const { token: newToken, ...userInfo } = response.data;
       
       localStorage.setItem("token", newToken);

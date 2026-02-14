@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const sensorRoutes = require("./routes/sensor");
 const userRoutes = require("./routes/user");
 const aiRoutes = require("./routes/ai");
+const mapRoutes = require("./routes/map");
 const { syncAtmosphericData } = require("./sync_atmos");
 
 const app = express();
@@ -35,7 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/sensor", sensorRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/ai", aiRoutes);
-
+app.use("/api/map", mapRoutes);
 
 const PORT = process.env.PORT || 5000;
 

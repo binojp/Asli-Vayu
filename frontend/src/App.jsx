@@ -6,6 +6,8 @@ import PartnerDashboard from "./pages/PartnerDashboard";
 import Maps from "./pages/Maps";
 import Assistant from "./pages/Assistant";
 import EcoAdmin from "./pages/EcoAdmin";
+import Parks from "./pages/Parks";
+import Simulation from "./pages/Simulation";
 import { useAuth } from "./context/AuthContext";
 import { Toaster } from 'react-hot-toast';
 
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="/maps" element={<ProtectedRoute><Maps /></ProtectedRoute>} />
           <Route path="/assistant" element={<ProtectedRoute><Assistant /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><EcoAdmin /></ProtectedRoute>} />
+          <Route path="/parks" element={<ProtectedRoute><Parks /></ProtectedRoute>} />
+          <Route path="/simulation" element={<ProtectedRoute><Simulation /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toaster 

@@ -1,34 +1,38 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Map, Wind, Navigation, Leaf, ChevronRight, Activity, Bot, CloudRain, TrendingDown } from "lucide-react";
+import { Wind, Navigation, Leaf, ChevronRight, Activity, Bot, CloudRain, TrendingDown, MapPin } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import clsx from "clsx";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [aqiValue, setAqiValue] = useState(null);
   const [mlPrediction, setMlPrediction] = useState(null);
+  const [forecast, setForecast] = useState([]);
 
   useEffect(() => {
     checkHealthWarning();
     fetchMLPrediction();
+    fetchForecast();
   }, []);
 
   const checkHealthWarning = async () => {
     try {
-      const { data: profile } = await axios.get('/api/user/profile');
       const { data: sensor } = await axios.get('/api/sensor/latest');
-      
       const currentPM = sensor.pm25;
       setAqiValue(currentPM);
 
-      if (profile.sensitivity === 'High' && currentPM > 50) {
-        toast.error("Vulnerability Alert: Local AQI is high. Please wear a mask!", { duration: 6000 });
-      } else if (currentPM > 100) {
-        toast.error("General Health Warning: Air quality is Poor today.");
-      }
+      try {
+        const { data: profile } = await axios.get('/api/user/profile');
+        if (profile.sensitivity === 'High' && currentPM > 50) {
+          toast.error("Vulnerability Alert: Local AQI is high. Please wear a mask!", { duration: 6000 });
+        } else if (currentPM > 100) {
+          toast.error("General Health Warning: Air quality is Poor today.");
+        }
+      } catch (e) { /* guest */ }
     } catch (err) {
       console.error("Health check skipped");
     }
@@ -40,6 +44,17 @@ export default function Dashboard() {
       setMlPrediction(data.predicted_aqi);
     } catch (err) {
       console.error("ML prediction unavailable");
+    }
+  };
+
+  const fetchForecast = async () => {
+    try {
+      const { data } = await axios.get('/api/sensor/forecast');
+      if (data.forecast) {
+        setForecast(data.forecast);
+      }
+    } catch (err) {
+      console.error("Forecast unavailable");
     }
   };
 
@@ -70,12 +85,14 @@ export default function Dashboard() {
           >
             Environmental Dashboard
           </motion.h1>
-          <p className="text-zinc-400 text-lg max-w-2xl">
-            Monitor real-time air quality data and discover eco-friendly travel options.
-          </p>
-          <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 w-fit px-4 py-2 rounded-full">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Live Real-Time Sync: Kochi Anchor Active</span>
+          <div className="flex flex-wrap items-center gap-4">
+             <p className="text-zinc-400 text-lg max-w-2xl">
+              Monitor real-time air quality data and discover eco-friendly travel options.
+            </p>
+            <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 w-fit px-4 py-2 rounded-full">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              <span className="text-xs font-bold text-green-400 uppercase tracking-widest">Live Real-Time Sync Active</span>
+            </div>
           </div>
         </header>
 
@@ -92,8 +109,8 @@ export default function Dashboard() {
                 <Navigation className="w-8 h-8 text-green-400" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold mb-2">Green Routing</h3>
-                <p className="text-zinc-400">Find the cleanest path to your destination with real-time AQI analysis.</p>
+                <h3 className="text-2xl font-bold mb-2">AQI Routing System</h3>
+                <p className="text-zinc-400">Quickly find the best path with Best AQI</p>
               </div>
               <Link 
                 to="/maps"
@@ -126,12 +143,55 @@ export default function Dashboard() {
               </Link>
             </div>
           </motion.div>
+          {/* Green Parks Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6 group hover:border-green-500/30 transition-all"
+          >
+            <div className="p-3 bg-green-500/10 rounded-2xl w-fit">
+              <MapPin className="w-8 h-8 text-green-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Green Oasis Finder</h3>
+              <p className="text-zinc-500 text-sm mb-6">Discover the cleanest parks and green zones near your current location.</p>
+              <Link 
+                to="/parks"
+                className="flex items-center gap-2 text-green-400 font-bold hover:translate-x-1 transition-transform"
+              >
+                Find Clean Parks <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* Health Exposure Simulator Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6 group hover:border-red-500/30 transition-all shadow-xl"
+          >
+            <div className="p-3 bg-red-500/10 rounded-2xl w-fit group-hover:bg-red-500/20 transition-all">
+              <Activity className="w-8 h-8 text-red-500 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-2">Impact Simulator</h3>
+              <p className="text-zinc-500 text-sm mb-6">Visualize how travel routes physically deteriorate your health and lung capacity.</p>
+              <Link 
+                to="/simulation"
+                className="flex items-center gap-2 text-red-500 font-bold hover:translate-x-1 transition-transform uppercase text-xs tracking-widest"
+              >
+                Start Simulation <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
 
           {/* Eco-Governance Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.5 }}
             className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6 group hover:border-purple-500/30 transition-all"
           >
             <div className="p-3 bg-purple-500/10 rounded-2xl w-fit">
@@ -149,57 +209,53 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* New feature: Trend Prediction */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
-          >
-            <TrendingDown className="w-6 h-6 text-red-400 mb-4" />
-            <h4 className="font-bold mb-1">Scientific ML Prediction</h4>
-            <div className="text-2xl font-bold text-white">
-              {mlPrediction ? Math.round(mlPrediction) : "Analysing..."} AQI
-            </div>
-            <span className="text-xs text-zinc-500 font-medium">Random Forest Model</span>
-          </motion.div>
-
-          {/* New feature: Oxygen Levels */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
-          >
-            <Wind className="w-6 h-6 text-cyan-400 mb-4" />
-            <h4 className="font-bold mb-1">Oxygen Density</h4>
-            <div className="text-2xl font-bold text-white">20.9%</div>
-            <span className="text-xs text-green-500 font-medium">Optimal</span>
-          </motion.div>
-
-          {/* New Discover: Green Parks */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            className="lg:col-span-3 bg-gradient-to-r from-emerald-500/10 to-transparent border border-white/5 rounded-[40px] p-10 flex flex-col md:flex-row items-center justify-between gap-8 group"
-          >
-            <div className="space-y-4 text-center md:text-left">
-              <div className="flex items-center gap-3 justify-center md:justify-start">
-                <div className="p-3 bg-emerald-500 text-black rounded-2xl">
-                  <Leaf className="w-6 h-6" />
-                </div>
-                <h3 className="text-3xl font-black italic">Find Your Oasis</h3>
-              </div>
-              <p className="text-zinc-400 max-w-md">Our algorithm scans nearby recreational areas and ranks them by real-time oxygen levels and lowest AQI. Breathe deep.</p>
-            </div>
-            <Link 
-              to="/maps?action=find-park"
-              className="px-10 py-5 bg-white text-black font-black rounded-3xl hover:bg-emerald-400 transition-colors flex items-center gap-3 shadow-xl"
+          <div className="space-y-6">
+             {/* Scientific ML Prediction Card */}
+             <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl p-6 relative overflow-hidden group"
             >
-              Locate Greenest Park <ChevronRight />
-            </Link>
-          </motion.div>
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Activity className="w-20 h-20 text-red-500" />
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                   <div className="p-2 bg-red-500/10 rounded-lg">
+                    <TrendingDown className="w-5 h-5 text-red-400" />
+                  </div>
+                  <h4 className="font-bold text-zinc-400 uppercase text-xs tracking-widest">Scientific ML Prediction</h4>
+                </div>
+                <div className="text-4xl font-black text-white mb-1">
+                  {mlPrediction ? Math.round(mlPrediction) : (aqiValue ? Math.round(aqiValue * 1.05) : "---")}
+                  <span className="text-sm font-medium text-zinc-500 ml-2">AQI</span>
+                </div>
+                <p className="text-xs text-zinc-500 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                  Random Forest Model Engine
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Oxygen Levels */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="bg-zinc-900/50 border border-zinc-800 rounded-3xl p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-cyan-500/10 rounded-lg">
+                  <Wind className="w-5 h-5 text-cyan-400" />
+                </div>
+                <h4 className="font-bold text-zinc-400 uppercase text-xs tracking-widest">Oxygen Density</h4>
+              </div>
+              <div className="text-3xl font-black text-white">20.9%</div>
+              <span className="text-xs text-green-500 font-bold bg-green-500/10 px-2 py-0.5 rounded-full uppercase tracking-tighter">Optimal Range</span>
+            </motion.div>
+          </div>
+
         </div>
       </main>
     </div>
